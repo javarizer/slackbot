@@ -1,0 +1,26 @@
+{
+  "dependencies": {
+    "JSONPath": "^0.10.0",
+    "bluebird": "^2.9.27",
+    "body-parser": "^1.4.3",
+    "cheerio": "^0.20.0",
+    "form-data": "^1.0.0-rc2",
+    "html-escaper": "^1.0.0",
+    "leveldown": "^1.4.4",
+    "levelup": "^1.2.1",
+    "lodash": "^2.4.1",
+    "moment": "^2.7.0",
+    "moment-parseformat": "^2.1.1",
+    "passport": "^0.3.2",
+    "passport-saml": "^0.15.0",
+    "request": "^2.37.0",
+    "sandbox": "^0.8.6",
+    "tough-cookie": "^2.0.0",
+    "weather.js": "0.0.2",
+    "ws": "^0.6.3",
+    "yql": "^1.0.2"
+  },
+  "scripts": {
+    "dev": "CONFIG=./config.dev.json node ./slackbot.js"
+  }
+}

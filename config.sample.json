@@ -1,0 +1,9 @@
+{
+	"api_token": "slack-api-token",
+	"rtm_token": "slack-real-time-api-token",
+	"server": "slack-server-name",
+	"username": "botName",
+	"channel": "#slack-channel-to-post-in",
+	"icon_url": "url-to-an-image.png",
+	"plugins": []
+}
