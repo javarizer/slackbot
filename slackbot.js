@@ -136,15 +136,12 @@ function openWebsocket(socket) {
 			, text = null;
 
 		if (data.type == "message") {
-			console.log(data)
 			text = data.text ? data.text.trim() : null;
 			var pipedCommands = text ? text.split('|') : [];
-			console.log(pipedCommands)
 			if (!data.subtype) {
 				// plain message
 				processCommands(data, pipedCommands)
 				.then(function (r) {
-					console.log("message", r);
 					SlackBot.sendMessage(data.channel, r);
 				})
 				.catch(function (e) {
