@@ -40,73 +40,77 @@ conf.plugins.forEach(function(name) {
 	const status = plugin.load(pluginRegistry);
 });
 
-var SlackBot = {
-	store: {
-		put: Promise.method(function(key, data) {
-			return new Promise(function (resolve, reject) {
-				db.put(key, data, function (err) {
-					if (err) {
-						return reject(err);
-					} else {
-						return resolve(true);
-					}
+var SlackBot = (channel) => {
+	return {
+		store: {
+			put: Promise.method(function (key, data) {
+				return new Promise(function (resolve, reject) {
+					db.put(key, data, function (err) {
+						if (err) {
+							return reject(err);
+						} else {
+							return resolve(true);
+						}
+					});
 				});
+			}),
+			get: Promise.method(function (key) {
+				return new Promise(function (resolve, reject) {
+					db.get(key, function (err, value) {
+						if (err) {
+							return reject(err);
+						} else {
+							return resolve(value);
+						}
+					});
+				});
+			})
+		},
+		getUserData: Promise.method(function (data) {
+			return request.getAsync({
+				url: "https://slack.com/api/users.info",
+				qs: {
+					token: conf.api_token,
+					user: data.user
+				}
+			}).spread(function (response, body) {
+				if (response.statusCode == 200) {
+					var userData = JSON.parse(body);
+					// run our callback with the results
+					return body
+				}
+			}).error(function (err) {
+				return false
 			});
 		}),
-		get: Promise.method(function(key) {
-			return new Promise(function (resolve, reject) {
-				db.get(key, function (err, value) {
-					if (err) {
-						return reject(err);
-					} else {
-						return resolve(value);
-					}
-				});
+		sendMessage: Promise.method(function (message) {
+			var queryParams = {};
+			queryParams = _.merge(
+				{
+					token: conf.api_token,
+					channel: channel,
+					username: conf.username,
+					icon_url: conf.icon_url,
+					as_user: false,
+					link_names: 1
+				},
+				message
+			);
+			if (queryParams.attachments) {
+				queryParams.attachments = JSON.stringify(queryParams.attachments)
+			}
+			return request.getAsync({
+				url: "https://slack.com/api/chat.postMessage",
+				method: "POST",
+				qs: queryParams
+			}).spread(function (response, body) {
+				if (response.statusCode == 200) {
+					var userData = JSON.parse(body);
+					return body
+				}
 			});
 		})
-	},
-	getUserData: Promise.method(function(data) {
-		return request.getAsync({
-			url: "https://slack.com/api/users.info",
-			qs: {
-				token: conf.api_token,
-				user: data.user
-			}
-		}).spread(function(response, body) {
-			if(response.statusCode == 200) {
-				var userData = JSON.parse(body);
-				// run our callback with the results
-				return body
-			}
-		}).error(function(err) { return false });
-	}),
-	sendMessage: Promise.method(function(channel, message) {
-		var queryParams = {};
-		queryParams = _.merge(
-			{
-				token: conf.api_token,
-				channel: channel,
-				username: conf.username,
-				icon_url: conf.icon_url,
-				as_user: false,
-				link_names: 1
-			},
-			message
-		);
-		if(queryParams.attachments) {
-			queryParams.attachments = JSON.stringify(queryParams.attachments)
-		}
-		return request.getAsync({
-			url: "https://slack.com/api/chat.postMessage",
-			method: "POST",
-			qs: queryParams
-		}).spread(function(response, body) {
-			if(response.statusCode == 200) {
-				var userData = JSON.parse(body);
-				return body
-			}
-		});
-	})
+	}
 };
 
 function openWebsocket(socket) {
@@ -136,40 +140,41 @@ function openWebsocket(socket) {
 			, text = null;
 
 		if (data.type == "message") {
+			var bot = SlackBot(data.channel);
 			text = data.text ? data.text.trim() : null;
 			var pipedCommands = text ? text.split('|') : [];
 			if (!data.subtype) {
 				// plain message
-				processCommands(data, pipedCommands)
+				processCommands(bot, data, pipedCommands)
 				.then(function (r) {
-					SlackBot.sendMessage(data.channel, r);
+					bot.sendMessage(/*data.channel,*/ r);
 				})
 				.catch(function (e) {
 					console.error(e);
-					SlackBot.sendMessage(data.channel, {text: e});
+					bot.sendMessage(/*data.channel,*/ {text: e});
 				});
 			}
 		}
 	});
 
-	var processCommands = Promise.method(function (data, cmds) {
+	var processCommands = Promise.method(function (bot, data, cmds) {
 		if (cmds) {
 			var cmd = cmds.shift().trim();
 			return new Promise(function (resolve, reject) {
 				_.forOwn(pluginRegistry.commands, function (command, name) {
 					if (command.r.test(cmd)) {
 						data.matches = command.r.exec(cmd);
-						SlackBot.getUserData(data)
+						bot.getUserData(data)
 							.then(function (userData) {
 								var userData = JSON.parse(userData);
-								return command.f(data, userData, SlackBot)
+								return command.f(data, userData, bot)
 							})
 							.then(function (message) {
 								if (!cmds.length) {
 									resolve(message);
 								} else {
 									cmds[0] += ' '+message.text;
-									resolve(processCommands(data, cmds));
+									resolve(processCommands(bot, data, cmds));
 								}
 							})
 							.catch(function (e) {
