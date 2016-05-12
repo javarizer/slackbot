@@ -142,52 +142,31 @@ function openWebsocket(socket) {
 		if (data.type == "message") {
 			var bot = SlackBot(data.channel);
 			text = data.text ? data.text.trim() : null;
-			var pipedCommands = text ? text.split('|') : [];
 			if (!data.subtype) {
 				// plain message
-				processCommands(bot, data, pipedCommands)
-				.then(function (r) {
-					bot.sendMessage(/*data.channel,*/ r);
-				})
-				.catch(function (e) {
-					console.error(e);
-					bot.sendMessage(/*data.channel,*/ {text: e});
-				});
+				processCommands(bot, data, text);
 			}
 		}
 	});
 
-	var processCommands = Promise.method(function (bot, data, cmds) {
-		if (cmds) {
-			var cmd = cmds.shift().trim();
-			return new Promise(function (resolve, reject) {
+	var processCommands = (bot, data, cmd) => {
+		if (cmd) {
 				_.forOwn(pluginRegistry.commands, function (command, name) {
 					if (command.r.test(cmd)) {
-						data.matches = command.r.exec(cmd);
+						var commandData = Object.assign({}, data);
+						commandData.matches = command.r.exec(cmd);
 						bot.getUserData(data)
-							.then(function (userData) {
-								var userData = JSON.parse(userData);
-								return command.f(data, userData, bot)
-							})
-							.then(function (message) {
-								if (!cmds.length) {
-									resolve(message);
-								} else {
-									cmds[0] += ' '+message.text;
-									resolve(processCommands(bot, data, cmds));
-								}
-							})
-							.catch(function (e) {
-								console.log(e);
-								reject();
-							});
+						.then(function (userData) {
+							var userData = JSON.parse(userData);
+							command.f(commandData, userData, bot)
+						})
+						.catch(function (e) {
+							console.log(e);
+						});
 					}
 				});
-			});
-		} else {
-			return false
 		}
-	});
+	}
 }
 
 function start() {

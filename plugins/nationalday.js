@@ -16,15 +16,15 @@ function returnMessage(out) {
 	}
 }
 
-var resetData = Promise.method(function(data, userData, SlackBot) {
+var resetData = Promise.method(function(data, userData, bot) {
 	daysStorage = {};
-	return returnMessage('Data Reset');
+	bot.sendMessage(returnMessage('Data Reset'));
 });
 
-var celebrate = Promise.method(function(data, userData, SlackBot) {
+var celebrate = Promise.method(function(data, userData, bot) {
 	var dateString = data.matches[1];
-	if(dateString == null) {
-		dateString = 'yyyy-MM-dd'
+	if(!dateString) {
+		dateString = new Date().toDateString()
 	}
 	dateString = dateString.trim();
 	var format = parseFormat(dateString);
@@ -34,10 +34,10 @@ var celebrate = Promise.method(function(data, userData, SlackBot) {
 		var day = date.format('D');
 		return loadMonth(month).then(function (monthData) {
 			var out = monthData[day] ? monthData[day] : "No data for " + date.format('MMMM D');
-			return returnMessage(out)
+			bot.sendMessage(returnMessage(out));
 		});
 	} else {
-		return returnMessage('Invalid Date');
+		bot.sendMessage(returnMessage('Invalid Date'));
 	}
 });
 

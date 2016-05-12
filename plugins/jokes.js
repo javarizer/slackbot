@@ -3,7 +3,7 @@ const Promise = require('bluebird')
 const _       = require('lodash');
 const request = Promise.promisifyAll(require("request"));
 
-var jokes = Promise.method(function(data, userData) {
+var jokes = Promise.method(function(data, userData, bot) {
   var URL = 'http://api.icndb.com/jokes/random';
   return request.getAsync({
     url: URL,
@@ -15,11 +15,11 @@ var jokes = Promise.method(function(data, userData) {
  		if(response.statusCode==200) {
 			var results = JSON.parse(body);
 			if(results != null && results.type == "success") {
-				return {
+				bot.sendMessage({
 					username: "Chuck Norris",
 					icon_url: "http://www.bf4-emblems.com/wp-content/uploads/2013/11/Chuck-Norris.jpg",
 					text: results.value.joke
-				}
+				});
 			}
 		}
   });

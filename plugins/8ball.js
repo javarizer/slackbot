@@ -39,12 +39,12 @@ const keywords = [
 	"would", "wouldn't"
 ]
 
-var fortune = Promise.method(function(data, userData) {
-	return {
+var fortune = Promise.method(function(data, userData, bot) {
+	bot.sendMessage({
 		username: "Magic 8Ball",
 		icon_url: "http://asphyxia.com/8ball.png",
 		text: answers[Math.floor(answers.length*Math.random())]
-	}
+	});
 });
 
 exports.load = function(registry) {

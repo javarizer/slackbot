@@ -3,11 +3,11 @@ var Sandbox = require('sandbox')
   , s = new Sandbox()
 	, html = require('html-escaper');
 
-var run = Promise.method(function(data, userData) {
+var run = Promise.method(function(data, userData, bot) {
 	var code = html.unescape(data.matches[3]);
 	return new Promise(function(resolve,reject) {
 		s.run(code, function(output) {
-			resolve({ text: "```"+output.result+"```" })
+			bot.sendMessage({ text: "```"+output.result+"```" })
 		});
 	});
 });

@@ -2,10 +2,10 @@ const Promise = require('bluebird');
 var YQL = require('yql');
 var _   = require('lodash');
 
-var forecast = Promise.method(function(data, userData) {
+var forecast = Promise.method(function(data, userData, bot) {
 	var query = new YQL('select * from weather.forecast where woeid in (select woeid from geo.places(1) where text="'+data.matches[2]+'")');
 	query = Promise.promisifyAll(query)
-	
+
 	return query.execAsync().then(function(data) {
 	  var location = data.query.results.channel.location;
 	  var condition = data.query.results.channel.item.condition;
@@ -19,25 +19,15 @@ var forecast = Promise.method(function(data, userData) {
 	  	})
 	  });
 	  var locationTitle = location.city + ', ' + (!!(location.region.length) ? location.region : location.country);
-	  return {
+	  bot.sendMessage({
 			username: "Current Conditions",
 			icon_url: "http://asphyxia.com/weather/png/"+condition.code+".png",
 			text: [
 				'*'+locationTitle+'*\n',
 				condition.text,
 				condition.temp+'\u00B0'
-			].join(' ')/*,
-			attachments: [
-				{
-					fallback: "Forecast for "+locationTitle,
-					pretext: "Forecast for "+locationTitle,
-					fields: forecastFields,
-					mrkdwn: true,
-					mrkdwn_in: ["fields"]
-				}
-			]
-			*/
-		};
+			].join(' ')
+		});
 	});
 });
 

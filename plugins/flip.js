@@ -36,7 +36,7 @@ const chars = {
     ')' : '(',
     '{' : '}',
     '}' : '{',
-    '?' : '\u00BF',  
+    '?' : '\u00BF',
     '\u00BF' : '?',
     '!' : '\u00A1',
     "\'" : ',',
@@ -53,18 +53,18 @@ const chars = {
     '\\' : '/'
 }
 
-var flip = Promise.method(function(data, userData) {
+var flip = Promise.method(function(data, userData, bot) {
     var text = data.matches[1];
     var flippedText = '(╯°□°）╯︵ ' + text.toLowerCase().split('').map(function(c) {
             return chars[c] ? chars[c] : c;
     }).reverse().join('');
-    
+
     // Return from the Promise
-    return {
+    bot.sendMessage({
         text: flippedText,
         username: userData.user.real_name,
         icon_url: userData.user.profile.image_48
-    };
+    });
 });
 
 exports.load = function(registry) {

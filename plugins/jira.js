@@ -41,11 +41,12 @@ var login = Promise.method(function(domain) {
 			login: 'Log In'
 		}
 	}).catch(function(e) {
-		console.log(e)
+		console.log(e);
+		Promise.reject();
 	})
 });
 
-var searchJira = Promise.method(function(data,userData,SlackBot) {
+var searchJira = Promise.method(function(data,userData,bot) {
 	var searchText = _.unescape(data.matches[1])
 	var apiURL = 'https://'+defaultDomain+'/rest/api/2/search';
 	return login(defaultDomain)
@@ -70,16 +71,19 @@ var searchJira = Promise.method(function(data,userData,SlackBot) {
 				return false;
 			} else {
 				if(json.issues.length == 1) {
-					return processTicketApiResponse(defaultDomain, response, JSON.stringify(json.issues[0]))
+					var results = processTicketApiResponse(defaultDomain, response, JSON.stringify(json.issues[0]))
+					if(results) {
+						bot.sendMessage(results);
+					}
 				} else {
 					var searchResults=[];
 					_.each(json.issues, function(issue) {
 						searchResults.push(issue.key+": <https://"+defaultDomain+"/browse/"+issue.key+"|"+issue.fields.summary+">");
 					});
-					return {
+					bot.sendMessage({
 						icon_url: "https://"+defaultDomain+"/images/64jira.png",
 						text: searchResults.join('\n')
-					}
+					});
 				}
 			}
 		} catch(e) {
@@ -92,7 +96,7 @@ var searchJira = Promise.method(function(data,userData,SlackBot) {
 	});
 });
 
-var getJiraTicket = Promise.method(function(data, userData) {
+var getJiraTicket = Promise.method(function(data, userData, bot) {
 	var page   = data.matches[0];
 	var domain = data.matches[1];
 	var ticket = data.matches[2];
@@ -102,7 +106,10 @@ var getJiraTicket = Promise.method(function(data, userData) {
 		return loadJiraTicket(ticketURL)
 	})
 	.spread(function(response, body){
-		return processTicketApiResponse(domain, response, body);
+		var results = processTicketApiResponse(domain, response, body);
+		if(results) {
+			bot.sendMessage(results)
+		}
 	});
 });
 
@@ -119,7 +126,7 @@ var createJiraDialog = Promise.method(function(data, userData) {
 
 });
 
-var createJira = Promise.method(function(data, userData) {
+var createJira = Promise.method(function(data, userData, bot) {
 	var key         = data.matches[1];
 	var summary     = data.matches[2];
 	var description = data.matches[3];
@@ -156,7 +163,9 @@ var createJira = Promise.method(function(data, userData) {
 	})
 	.spread(function(response, body){
 		var results = processTicketApiResponse(defaultDomain, response, body);
-		return results
+		if(results) {
+			bot.sendMessage(results)
+		}
 	});
 });
 
@@ -164,9 +173,9 @@ var registerSlackName =Promise.method(function(data, userData) {
 	var jira_username = data.matches[1];
 	unames[userData.user.id] = jira_username;
 	fs.writeFileSync(__dirname+"/jira_usernames.json", JSON.stringify(unames));
-	return {
+	bot.sendMessage({
 		text: "Your usernames have been linked."
-	}
+	});
 });
 
 // process the jira api response

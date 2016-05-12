@@ -43,17 +43,17 @@ const letters = {
 	z: ['ncaa_akr']
 };
 
-var spell = Promise.method(function(data, userData) {
+var spell = Promise.method(function(data, userData, bot) {
 	var input = data.matches[1].trim().split('');
 	var output = "";
 	_.forEach(input, function(letter) {
 		var l = letter.toLowerCase();
 		output += letters[l] ? ":"+letters[l][Math.floor(letters[l].length*Math.random())]+":" : letter;
 	});
-	return {
+	bot.sendMessage({
 		username: "Emojized",
 		text: output.replace(/\s/gi,new Array(5).join(' '))
-	}
+	});
 });
 
 exports.load = function(registry) {
