@@ -109,6 +109,33 @@ var SlackBot = (channel) => {
 					return body
 				}
 			});
+		}),
+		updateMessage: Promise.method(function (message) {
+			var queryParams = {};
+			queryParams = _.merge(
+				{
+					token: conf.api_token,
+					channel: channel,
+					username: conf.username,
+					icon_url: conf.icon_url,
+					as_user: true,
+					link_names: 1
+				},
+				message
+			);
+			if (queryParams.attachments) {
+				queryParams.attachments = JSON.stringify(queryParams.attachments)
+			}
+			return request.getAsync({
+				url: "https://slack.com/api/chat.update",
+				method: "POST",
+				qs: queryParams
+			}).spread(function (response, body) {
+				if (response.statusCode == 200) {
+					var userData = JSON.parse(body);
+					return body
+				}
+			});
 		})
 	}
 };
