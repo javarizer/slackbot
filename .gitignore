@@ -31,6 +31,7 @@ config.json
 config.dev.json
 plugins/jira_config.json
 plugins/jira_usernames.json
+plugins/search_config.json
 .idea
 /plugins/scores
 /plugins/scores.js
