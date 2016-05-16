@@ -2,6 +2,7 @@
 const Promise = require('bluebird');
 const _       = require('lodash');
 const request = Promise.promisifyAll(require('request'));
+const config = require('./search_config.json');
 
 const sites = [
     [ "mdn",     "developer.mozilla.org " ]
@@ -22,38 +23,48 @@ function getSiteUrl(siteName) {
   return false
 }
 
-var search = Promise.method(function(data, userData) {
+var search = Promise.method(function(data, userData, bot) {
   //var userText = "<@"+slack.hook.user_id+"|"+slack.hook.user_name+">";
-  var searchURL = 'https://ajax.googleapis.com/ajax/services/search/web';
+  //var searchURL = 'https://ajax.googleapis.com/ajax/services/search/web';
+	var searchURL = 'https://www.googleapis.com/customsearch/v1';
   var site = data.matches[1];
   var query = data.matches[2];
   var siteUrl = getSiteUrl(site);
-  if(siteUrl) {
-    query = 'site:'+siteUrl+query
-  }
-
+	var qs = {
+		"cx": config.searchId,
+			"key": config.apikey,
+			"v": "1.0",
+			"safe": "high",
+			"filter": "1",
+			"fields": "items(displayLink,fileFormat,formattedUrl,htmlFormattedUrl,htmlSnippet,htmlTitle,kind,link,mime,snippet,title)",
+			"num": 5,
+			"q": query
+	};
+	if(siteUrl) {
+		qs.siteSearch = siteUrl
+	}
   return request.getAsync({
     url: searchURL,
-    qs: {
-      "v": "1.0",
-      "q": query
-    }
+		qs: qs
   })
   .spread(function(response, body){
     if(response.statusCode==200) {
 		  var results = JSON.parse(body);
-		  if(results.responseData != null && !!results.responseData.results.length) {
-        var resultUrl = results.responseData.results[0].unescapedUrl;
-        var resultTitle = results.responseData.results[0].titleNoFormatting;
-        var resultMore = results.responseData.cursor.moreResultsUrl;
-        return {
+		  if(results.items != null && !!results.items.length) {
+				var items = results.items;
+        var resultUrl = items[0].link;
+        var resultTitle = items[0].title;
+				var resultSnippet = items[0].snippet.replace('\n',' ');
+        var resultMore = 'https://google.com/search?q='+query;
+        bot.sendMessage({
 					username: "Search Results",
 					icon_emoji: ":mag_right:",
 					text: [
 						"<"+resultUrl+"|"+resultTitle+">",
+						resultSnippet,
 						"<"+resultMore+"|See More Results\u2026>"
 					].join('\n')
-				}
+				});
 		  }
     }
   });
