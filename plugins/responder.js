@@ -12,7 +12,6 @@ const listeners = [
 
 var responder = Promise.method(function(data, userData, bot) {
 	_.forEach(listeners, l => {
-		console.log('listeners')
 		if(l.trigger.test(data.text)) {
 			bot.sendMessage({ text: l.response })
 		}
