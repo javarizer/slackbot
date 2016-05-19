@@ -169,7 +169,7 @@ var createJira = Promise.method(function(data, userData, bot) {
 	});
 });
 
-var registerSlackName =Promise.method(function(data, userData) {
+var registerSlackName =Promise.method(function(data, userData, bot) {
 	var jira_username = data.matches[1];
 	unames[userData.user.id] = jira_username;
 	fs.writeFileSync(__dirname+"/jira_usernames.json", JSON.stringify(unames));
