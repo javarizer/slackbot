@@ -7,6 +7,10 @@ const listeners = [
 	{
 		trigger: /srsly|gui[sz]e/,
 		response: "http://66.media.tumblr.com/2ef6d723c5b06fc7a25f6a32bb7ddeb0/tumblr_mpdnikiHrl1r9n3cmo1_400.gif"
+	},
+	{
+		trigger: /release the kraken/,
+		response: "https://asphyxia.com/i/release-the-wee-kraken.jpg"
 	}
 ];
 
