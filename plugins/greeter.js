@@ -18,7 +18,7 @@ exports.load = function(registry) {
 	var helpText = null;
 	registry.register(
 		'greeter',                                  //plugin name
-		/^(aloha|hello|hi|howdy|hey|greetings|sup|hola)$/im, // trigger regex
+		/^(aloha|hello(?:w)?|hi|howdy|hey|greetings|sup|hola)$/im, // trigger regex
 		greet,                                      // function to run
 		helpText                                    // help text
 	);
