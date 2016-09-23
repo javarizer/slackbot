@@ -2,7 +2,6 @@
 'use strict';
 const Promise = require('bluebird');
 const _       = require('lodash');
-
 const listeners = [
 	{
 		trigger: /srsly|gui[sz]e/,
@@ -23,6 +22,27 @@ var responder = Promise.method(function(data, userData, bot) {
 	return true
 });
 
+var helpFull = Promise.method(function(data, userData, bot) {
+	var attachments = [];
+	_.forOwn(listeners, function(listener) {
+		attachments.push(
+			{
+				fallback: `${listener.trigger.toString()}\n\t${listener.response}`,
+				mrkdwn_in: ['fields'],
+				fields: [
+					{title: listener.trigger.toString()},
+					{value: listener.response}
+				]
+			}
+		);
+	});
+	bot.sendMessage({
+		username: 'Responder Help',
+		text: "The responder bot listens for specific triggers in text and responds accordingly.",
+		attachments: attachments
+	});
+});
+
 exports.load = function(registry) {
 	registry.register(
 		//plugin name
@@ -31,9 +51,17 @@ exports.load = function(registry) {
 		/.*/im,
 		// function to run
 		responder,
-		//()=>{ return respond('http://66.media.tumblr.com/2ef6d723c5b06fc7a25f6a32bb7ddeb0/tumblr_mpdnikiHrl1r9n3cmo1_400.gif') },
 		// help text
-		'srsly guise'
+		''
 	);
+
+	// help method
+	registry.register(
+		'responder-help',
+		/^[`!]responder help/im,
+		helpFull,
+		''
+	);
+
 	return true;
 }

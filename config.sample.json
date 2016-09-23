@@ -5,5 +5,7 @@
 	"username": "botName",
 	"channel": "#slack-channel-to-post-in",
 	"icon_url": "url-to-an-image.png",
+	"data_dir": "./stores",
+	"triggers": "!`",
 	"plugins": []
 }

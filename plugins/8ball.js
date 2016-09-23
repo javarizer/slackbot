@@ -29,7 +29,7 @@ const answers = [
 const keywords = [
 	"is", "isn't",
 	"was", "were",
-	"are", "aren't",
+	"am", "are", "aren't",
 	"can", "can't",
 	"have", "haven't",
 	"will", "won't",
@@ -37,7 +37,7 @@ const keywords = [
 	"did", "didn't",
 	"should", "shouldn't",
 	"would", "wouldn't"
-]
+];
 
 var fortune = Promise.method(function(data, userData, bot) {
 	bot.sendMessage({
@@ -47,13 +47,24 @@ var fortune = Promise.method(function(data, userData, bot) {
 	});
 });
 
+var helpText = `
+*NAME*
+	8ball - Ask the Magic 8Ball a yes/no question
+
+*DESCRIPTION*
+	The Magic 8Ball will answer any yes/no question it is asked that is preceeded by the bot's trigger phrase and ends in a question mark.
+`;
+var help = Promise.method(function(data, userData, bot) {
+	bot.sendMessage({text: helpText})
+});
+
 exports.load = function(registry) {
-	var helpText = 'Ask me a yes/no question.';
-	registry.register(
-		'8Ball',                 //plugin name
-		new RegExp("^[`!](" + keywords.join('|') + ")[^?]+[?]$",'im'),  // trigger regex
-		fortune,                 // function to run
-		helpText                 // help text
+	registry.respond(
+		new RegExp("(" + keywords.join('|') + ")[^?]+[?]$",'im'),
+		fortune
 	);
+
+	registry.help('Magic 8ball - Ask the Magic 8Ball a yes/no question. `8ball help` for details.');
+	registry.hear(/^8ball help$/, help);
 	return true;
-}
+};

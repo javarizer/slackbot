@@ -14,15 +14,16 @@ var run = Promise.method(function(data, userData, bot) {
 
 exports.load = function(registry) {
 	var helpText = 'paste me some code.';
-	registry.register(
-		// NAME
-		'sandbox',
-		// TRIGGER
-		/```([\s\n]*?\/\/[\s]*?(js|javascript))([^]*?)```/im,
-		// METHOD
-		run,
-		// HELPT TEXT
-		helpText
-	);
+	registry.hear(/```([\s\n]*?\/\/[\s]*?(js|javascript))([^]*?)```/,run);
+	// registry.register(
+	// 	// NAME
+	// 	'sandbox',
+	// 	// TRIGGER
+	// 	/```([\s\n]*?\/\/[\s]*?(js|javascript))([^]*?)```/im,
+	// 	// METHOD
+	// 	run,
+	// 	// HELPT TEXT
+	// 	helpText
+	// );
 	return true;
-}
+};

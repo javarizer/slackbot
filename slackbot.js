@@ -7,9 +7,8 @@ const WebSocket = require('ws');
 const _ = require('lodash');
 const Promise = require('bluebird');
 const request = Promise.promisifyAll(require("request"));
-const levelup = require('levelup');
-var db = levelup('./slackbot.db');
 
+var _self;
 var ws;
 var messageID = 0;
 var ws_retries = 0;
@@ -19,7 +18,10 @@ const conf = require(process.env.CONFIG || "./config.json");
 const pluginRegistry = {
 	names: [],
 	commands: {},
-	help: {},
+	helpTexts: [],
+	help: function(helpText) {
+		pluginRegistry.helpTexts.push(helpText)
+	},
 	register: function(name, regex, func, help) {
 		pluginRegistry.commands[name]= {
 			r: regex, // the regex to parse
@@ -31,41 +33,34 @@ const pluginRegistry = {
 		console.log("==================");
 		console.log("Registering plugin");
 		console.log(name, regex);
+	},
+	hear: (regex, func) => {
+		pluginRegistry.commands[regex.source]= {
+			r: regex, // the regex to parse
+			f: func   // the function to run
+		};
+		console.log("==================");
+		console.log("Listening for");
+		console.log(regex.source);
+	},
+	respond: (regex, func) => {
+		// merge the triggers for the regex
+		pluginRegistry.commands[regex.source]= {
+			r: new RegExp(
+				"^(?:["+conf.triggers+"]|"+conf.username+"|<@"+_self+">)[,:]?\\s*?"+regex.source,
+				_.union(regex.flags.split(''),['i','m']).join('')),
+			f: func
+		};
+		console.log("==================");
+		console.log("Responding to");
+		console.log(pluginRegistry.commands[regex.source].r.source);
 	}
 };
 
-// load the plugins
-conf.plugins.forEach(function(name) {
-	const plugin = require('./plugins/'+name);
-	const status = plugin.load(pluginRegistry);
-});
-
 var SlackBot = (channel) => {
 	return {
-		store: {
-			put: Promise.method(function (key, data) {
-				return new Promise(function (resolve, reject) {
-					db.put(key, data, function (err) {
-						if (err) {
-							return reject(err);
-						} else {
-							return resolve(true);
-						}
-					});
-				});
-			}),
-			get: Promise.method(function (key) {
-				return new Promise(function (resolve, reject) {
-					db.get(key, function (err, value) {
-						if (err) {
-							return reject(err);
-						} else {
-							return resolve(value);
-						}
-					});
-				});
-			})
-		},
+		self: _self,
+		config: conf,
 		getUserData: Promise.method(function (data) {
 			return request.getAsync({
 				url: "https://slack.com/api/users.info",
@@ -108,6 +103,8 @@ var SlackBot = (channel) => {
 					var userData = JSON.parse(body);
 					return body
 				}
+			}).error((e) => {
+				console.log(e)
 			});
 		}),
 		updateMessage: Promise.method(function (message) {
@@ -141,13 +138,13 @@ var SlackBot = (channel) => {
 };
 
 function openWebsocket(socket) {
-	var ME = socket.self.id;
-
 	// the socket needs to be ok in order to be opened
 	if (socket.ok !== true) {
 		console.error("Failed to open socket");
 		return false
 	}
+
+	_self = socket.self.id;
 
 	ws = new WebSocket(socket.url);
 
@@ -196,19 +193,34 @@ function openWebsocket(socket) {
 	}
 }
 
+var slackbotHelp = Promise.method(function(data, userData, bot) {
+	bot.sendMessage({
+		text: pluginRegistry.helpTexts.join('\n')
+	})
+});
+
 function start() {
 	if(ws_retries++ < ws_max_retries) {
 		request.getAsync({
 			url: "https://slack.com/api/rtm.start",
-			qs: { token: conf.rtm_token }
-		}).spread(function(response,body) {
-			if(response.statusCode == 200) {
+			qs: {token: conf.rtm_token}
+		}).spread(function (response, body) {
+			if (response.statusCode == 200) {
 				body = JSON.parse(body);
 				openWebsocket(body);
+				// load the plugins
+				pluginRegistry.respond(
+					new RegExp("help$",'im'),
+					slackbotHelp
+				);
+				conf.plugins.forEach(function(name) {
+					const plugin = require('./plugins/'+name);
+					const status = plugin.load(pluginRegistry);
+				});
 			} else {
 				// try again
-				console.log("retrying in "+ (ws_retries*5000)/1000+" seconds")
-				setTimeout(start, ws_retries*5000)
+				console.log("retrying in " + (ws_retries * 5000) / 1000 + " seconds");
+				setTimeout(start, ws_retries * 5000)
 			}
 		});
 	}

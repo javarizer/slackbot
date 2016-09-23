@@ -40,4 +40,4 @@ plugins/search_config.json
 /plugins/slack_cookie.txt
 
 # ignore leveldb directories
-*.db
+/stores
