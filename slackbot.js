@@ -48,7 +48,7 @@ const pluginRegistry = {
 		pluginRegistry.commands[regex.source]= {
 			r: new RegExp(
 				"^(?:["+conf.triggers+"]|"+conf.username+"|<@"+_self+">)[,:]?\\s*?"+regex.source,
-				_.union(regex.flags.split(''),['i','m']).join('')),
+				_.union(regex.flags ? regex.flags.split('') : '',['i','m']).join('')),
 			f: func
 		};
 		console.log("==================");
