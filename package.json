@@ -5,6 +5,7 @@
     "body-parser": "^1.4.3",
     "cheerio": "^0.20.0",
     "form-data": "^1.0.0-rc2",
+    "google": "^2.1.0",
     "html-escaper": "^1.0.0",
     "leveldown": "^1.4.4",
     "levelup": "^1.2.1",
