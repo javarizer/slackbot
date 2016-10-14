@@ -37,21 +37,20 @@ var search = Promise.method(function(data, userData, bot) {
 		if(err) {
 			return false;
 		}
-		if(res.links.length) {
-			let result = res.links[0];
+		for(let i = 0, l = res.links.length; i < l; i++) {
+			let link = res.links[i];
+			if(link.href == null) { continue; }
 			bot.sendMessage({
 				username: "Search Results",
-				icon_emoji: ":mag_right:",
+				icon_emoji: ":google_favicon:",
 				text: [
-					"<"+result.link+"|"+result.title+">",
-					result.description.replace(/\n/g, ' '),
+					"<"+link.link+"|"+link.title+">",
+					link.description.replace(/\n/g, ' '),
 					"<"+res.url+"|See More Results\u2026>"
 				].join('\n')
 			});
+			break;
 		}
-		res.links.forEach((link) => {
-
-		});
 		return true;
 	});
 });
