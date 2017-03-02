@@ -1,12 +1,12 @@
 const Promise = require('bluebird');
-var helpText = `
+const helpText = `
 *NAME*
 	The Corporate B.S. Generator - Generates some B.S.
 
 *DESCRIPTION*
 	The Corporate B.S. Generator will appropriately facilitate resource-sucking initiatives
 `;
-var help = Promise.method(function(data, userData, bot) {
+let help = Promise.method(function(data, userData, bot) {
 	bot.sendMessage({text: helpText})
 });
 
@@ -87,7 +87,7 @@ exports.load = function(registry) {
 		bullshit
 	);
 
-	//registry.help('Magic 8ball - Ask the Magic 8Ball a yes/no question. `8ball help` for details.');
-	//registry.hear(/^8ball help$/, help);
+	registry.help('The Corporate B.S. Generator - Generates some B.S. `BS help` for details.');
+	registry.hear(/^BS help$/, help);
 	return true;
 };
