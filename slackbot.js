@@ -12,11 +12,11 @@ const _ = require('lodash');
 const Promise = require('bluebird');
 //const request = Promise.promisifyAll(require("request"));
 
-var _self;
-var ws;
-var messageID = 0;
-var ws_retries = 0;
-var ws_max_retries = 5;
+let _self;
+let ws;
+let messageID = 0;
+let ws_retries = 0;
+let ws_max_retries = 5;
 // SET UP SLACK
 const conf = require(process.env.CONFIG || "./config.json");
 const web = new WebClient(conf.api_token);
@@ -147,8 +147,6 @@ var slackbotHelp = Promise.method(function(data, userData, bot) {
 
 function start() {
 
-	let bot = SlackBot();
-
 	let processCommands = (bot, data) => {
 		if (data.text) {
 			_.forOwn(pluginRegistry.commands, function (command, name) {
@@ -186,6 +184,16 @@ function start() {
 
 	rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function handleConnecting(data) {
 		console.log('AUTHENTICATED');
+		_self = data.self.id;
+		let bot = SlackBot();
+		// register the help command
+		pluginRegistry.respond(
+			new RegExp("help$",'im'),
+			slackbotHelp
+		);
+		conf.plugins.forEach(function(name) {
+			require('./plugins/'+name).load(bot);
+		});
 	});
 
 	rtm.on(CLIENT_EVENTS.RTM.ATTEMPTING_RECONNECT, function handleConnecting(data) {
@@ -193,21 +201,10 @@ function start() {
 	});
 
 	rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
-		console.log('Message:', message);
 		if (message.type == "message" && !message.subtype) {
 			let bot = SlackBot(message.channel);
 			processCommands(bot, message);
 		}
-	});
-
-	// register the help command
-	pluginRegistry.respond(
-		new RegExp("help$",'im'),
-		slackbotHelp
-	);
-
-	conf.plugins.forEach(function(name) {
-		require('./plugins/'+name).load(bot);
 	});
 }
 
