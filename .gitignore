@@ -27,17 +27,15 @@ build/Release
 node_modules
 
 # app specific things
-config.json
+*config.json
 config.dev.json
-plugins/jira_config.json
 plugins/jira_usernames.json
-plugins/search_config.json
 .idea
 /plugins/scores
 /plugins/scores.js
 /plugins/scores/teams.json
 /plugins/slackStats.js
-/plugins/slack_cookie.txt
+/plugins/slack*.txt
 
 # ignore leveldb directories
 /stores
