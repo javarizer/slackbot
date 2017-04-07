@@ -82,6 +82,8 @@ var SlackBot = (channel) => {
 		register: pluginRegistry.register,
 		respond: pluginRegistry.respond,
 		hear: pluginRegistry.hear,
+		channel: channel,
+		web: web,
 		getUserData: Promise.method(function (user) {
 			return web.users.info(user)
 			.then(user => {
@@ -145,9 +147,9 @@ var slackbotHelp = Promise.method(function(data, userData, bot) {
 	})
 });
 
-function start() {
-
-	let processCommands = (bot, data) => {
+const start = function _start() {
+	let pluginsLoaded = false;
+	const processCommands = (bot, data) => {
 		if (data.text) {
 			_.forOwn(pluginRegistry.commands, function (command, name) {
 				if (command.r.test(data.text)) {
@@ -163,6 +165,19 @@ function start() {
 				}
 			});
 		}
+	};
+
+	const loadPlugins = () => {
+		let bot = SlackBot();
+		pluginRegistry.respond(
+			new RegExp("help$", 'im'),
+			slackbotHelp
+		);
+
+		conf.plugins.forEach(function (name) {
+			require('./plugins/' + name).load(bot);
+		});
+		pluginsLoaded=true;
 	};
 
 	let rtm = new RtmClient(
@@ -185,15 +200,10 @@ function start() {
 	rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function handleConnecting(data) {
 		console.log('AUTHENTICATED');
 		_self = data.self.id;
-		let bot = SlackBot();
 		// register the help command
-		pluginRegistry.respond(
-			new RegExp("help$",'im'),
-			slackbotHelp
-		);
-		conf.plugins.forEach(function(name) {
-			require('./plugins/'+name).load(bot);
-		});
+		if(!pluginsLoaded) {
+			loadPlugins()
+		}
 	});
 
 	rtm.on(CLIENT_EVENTS.RTM.ATTEMPTING_RECONNECT, function handleConnecting(data) {
@@ -206,7 +216,7 @@ function start() {
 			processCommands(bot, message);
 		}
 	});
-}
+};
 
 // ALL SYSTEMS GO!
 start();
