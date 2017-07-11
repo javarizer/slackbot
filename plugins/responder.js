@@ -4,12 +4,16 @@ const Promise = require('bluebird');
 const _       = require('lodash');
 const listeners = [
 	{
-		trigger: /srsly|gui[sz]e/,
+		trigger: /\b(?:srsly|gui[sz]e)\b/,
 		response: "http://66.media.tumblr.com/2ef6d723c5b06fc7a25f6a32bb7ddeb0/tumblr_mpdnikiHrl1r9n3cmo1_400.gif"
 	},
 	{
 		trigger: /release the kraken/,
 		response: "https://asphyxia.com/i/release-the-wee-kraken.jpg"
+	},
+	{
+		trigger: /automagic(?:aly)?/i,
+		response: ":wizard_hat:  Automagically\t\t\t\t\t:buggy:\n:j_c2: /\n:shirt::magic_wand:\n:jeans:"
 	}
 ];
 
@@ -44,24 +48,7 @@ var helpFull = Promise.method(function(data, userData, bot) {
 });
 
 exports.load = function(registry) {
-	registry.register(
-		//plugin name
-		'responder',
-		// trigger regex
-		/.*/im,
-		// function to run
-		responder,
-		// help text
-		''
-	);
-
-	// help method
-	registry.register(
-		'responder-help',
-		/^[`!]responder help/im,
-		helpFull,
-		''
-	);
-
+	registry.hear(new RegExp(".*?",'im'), responder);
+	registry.hear(/^responder help$/, helpFull);
 	return true;
-}
+};
