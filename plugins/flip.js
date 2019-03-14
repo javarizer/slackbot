@@ -3,7 +3,7 @@
  */
 "use strict";
 const Promise = require('bluebird');
-const chars = {
+var chars = {
     'a' : '\u0250',
     'b' : 'q',
     'c' : '\u0254',
@@ -55,6 +55,9 @@ const chars = {
     '\u2533' : '\u253B',
     '\u253B' : '\u2533'
 }
+Object.getOwnPropertyNames(chars).forEach(k => {
+ chars[chars[k]] = k
+})
 
 var flip = Promise.method(function(data, userData, bot) {
     var text = data.matches[1];
