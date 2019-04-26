@@ -15,11 +15,13 @@ const answers = [
 "Signs point to yes",
 "Reply hazy try again",
 "Ask again later",
+"Ask Henry",
 "Better not tell you now",
 "Cannot predict now",
 "Concentrate and ask again",
 "Don't count on it",
 "My reply is no",
+"Please consult with Mr. Graphs",
 "My sources say no",
 "Outlook not so good",
 "Very doubtful"
